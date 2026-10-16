@@ -1,0 +1,87 @@
+@model AcxiomCRM.ViewModels.UserEditViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="fw-bold mb-0">Edit User: @Model.FullName</h3>
+                <span class="text-muted small">Update role assignments and password credentials</span>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Users
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="Email" />
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email / Username (Readonly)</label>
+                            <input class="form-control bg-light" value="@Model.Email" readonly />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label fw-semibold"></label>
+                            <select asp-for="Role" class="form-select">
+                                <option value="SalesExecutive">Sales Executive</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Admin">Administrator</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Account State</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" asp-for="IsActive" />
+                                <label class="form-check-label fw-semibold" asp-for="IsActive">Account Active</label>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <label asp-for="NewPassword" class="form-label fw-semibold text-danger"></label>
+                                <input asp-for="NewPassword" class="form-control" placeholder="Enter new password only if resetting" />
+                                <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                                <div class="form-text small">Leave blank to retain current password. If provided, must comply with 8-character complexity policy.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i> Update User Profile
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

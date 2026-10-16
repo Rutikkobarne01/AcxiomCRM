@@ -1,0 +1,86 @@
+@model AcxiomCRM.ViewModels.UserCreateViewModel
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="fw-bold mb-0">Create Application User</h3>
+                <span class="text-muted small">Provision user accounts with assigned security roles</span>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Users
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="FullName" class="form-label fw-semibold"></label>
+                            <input asp-for="FullName" class="form-control" placeholder="e.g. Priya Sharma" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" placeholder="priya@acxiomcrm.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="10-digit phone" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Role" class="form-label fw-semibold"></label>
+                            <select asp-for="Role" class="form-select">
+                                <option value="SalesExecutive">Sales Executive</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Admin">Administrator</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label fw-semibold"></label>
+                            <input asp-for="Password" class="form-control" placeholder="Initial Password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 small border">
+                                <div class="fw-bold mb-1 text-secondary">Password Security Policy:</div>
+                                <ul class="mb-0 ps-3 text-muted">
+                                    <li>Minimum 8 characters</li>
+                                    <li>At least one uppercase and one lowercase letter</li>
+                                    <li>At least one digit and one special character</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="bi bi-person-plus me-1"></i> Create User
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

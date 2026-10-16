@@ -1,0 +1,86 @@
+@model AcxiomCRM.ViewModels.LeadConvertViewModel
+@{
+    ViewData["Title"] = "Convert Lead";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white py-3">
+                <h4 class="mb-0 fw-bold"><i class="bi bi-arrow-repeat me-2"></i> Convert Lead to Customer</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted">
+                    Converting lead <strong>@Model.LeadName</strong> (@Model.LeadCode) will automatically create a verified Customer account and can simultaneously generate an initial sales deal opportunity in your pipeline.
+                </p>
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="p-3 bg-light rounded-3 mb-4 border">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-person-check me-2 text-success"></i> Customer Information to be Generated:</h6>
+                    <div class="row small">
+                        <div class="col-sm-6 mb-1"><strong>Name:</strong> @Model.LeadName</div>
+                        <div class="col-sm-6 mb-1"><strong>Company:</strong> @(Model.CompanyName ?? "N/A")</div>
+                        <div class="col-sm-6 mb-1"><strong>Email:</strong> @Model.Email</div>
+                        <div class="col-sm-6 mb-1"><strong>Phone:</strong> @Model.Phone</div>
+                    </div>
+                </div>
+
+                <form asp-action="Convert" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="LeadId" />
+                    <input type="hidden" asp-for="LeadCode" />
+                    <input type="hidden" asp-for="LeadName" />
+                    <input type="hidden" asp-for="Email" />
+                    <input type="hidden" asp-for="Phone" />
+                    <input type="hidden" asp-for="CompanyName" />
+
+                    <div class="form-check form-switch mb-3 p-3 bg-light rounded border">
+                        <input class="form-check-input ms-0 me-3" type="checkbox" asp-for="CreateOpportunity" id="createOppSwitch" />
+                        <label class="form-check-label fw-bold" for="createOppSwitch">
+                            Create Sales Opportunity Deal in Pipeline
+                        </label>
+                        <div class="form-text small">Generates an active deal mapped to this new customer.</div>
+                    </div>
+
+                    <div id="oppDetailsSection">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="OpportunityAmount" class="form-label fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input asp-for="OpportunityAmount" class="form-control" />
+                                </div>
+                                <span asp-validation-for="OpportunityAmount" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="OpportunityStage" class="form-label fw-semibold"></label>
+                                <select asp-for="OpportunityStage" class="form-select">
+                                    <option value="Qualification">Qualification</option>
+                                    <option value="Proposal">Proposal</option>
+                                    <option value="Negotiation">Negotiation</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a asp-action="Details" asp-route-id="@Model.LeadId" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success px-4 fw-semibold">
+                            <i class="bi bi-check2-all me-1"></i> Confirm & Convert Lead
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('createOppSwitch').addEventListener('change', function() {
+            document.getElementById('oppDetailsSection').style.display = this.checked ? 'block' : 'none';
+        });
+    </script>
+}

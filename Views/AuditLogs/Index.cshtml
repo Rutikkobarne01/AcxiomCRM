@@ -1,0 +1,197 @@
+@model List<AcxiomCRM.Models.Entities.AuditLog>
+@{
+    ViewData["Title"] = "Security & Audit Logs";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Security & Audit Trail</h2>
+        <p class="text-muted mb-0">Append-only immutable record of authentication events, CRUD actions, and role updates</p>
+    </div>
+    <div>
+        <span class="badge bg-dark p-2">Total Logged Events: @ViewBag.TotalCount</span>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <input type="text" name="userFilter" class="form-control" placeholder="Search user or email..." value="@ViewBag.UserFilter" />
+            </div>
+            <div class="col-md-2">
+                <select name="moduleFilter" class="form-select">
+                    <option value="">All Modules</option>
+                    @if (ViewBag.DistinctModules != null)
+                    {
+                        foreach (string m in ViewBag.DistinctModules)
+                        {
+                            <option value="@m" selected="@(ViewBag.ModuleFilter == m)">@m</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="actionFilter" class="form-select">
+                    <option value="">All Actions</option>
+                    @if (ViewBag.DistinctActions != null)
+                    {
+                        foreach (string a in ViewBag.DistinctActions)
+                        {
+                            <option value="@a" selected="@(ViewBag.ActionFilter == a)">@a</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate" placeholder="From Date" />
+            </div>
+            <div class="col-md-2">
+                <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate" placeholder="To Date" />
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-funnel"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Audit Log Table -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Timestamp (UTC)</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Module / Entity</th>
+                        <th>Record ID</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                        <th class="text-end">Changes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <small class="text-muted font-monospace">@item.CreatedDate.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                                </td>
+                                <td>
+                                    <strong>@(item.UserName ?? "System / Anonymous")</strong>
+                                </td>
+                                <td>
+                                    @if (item.Action == "Login" || item.Action == "Login Success")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Login Success</span>
+                                    }
+                                    else if (item.Action.Contains("Failed") || item.Action.Contains("Lockout"))
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">@item.Action</span>
+                                    }
+                                    else if (item.Action == "Create")
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Create</span>
+                                    }
+                                    else if (item.Action == "Update")
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Update</span>
+                                    }
+                                    else if (item.Action == "Delete" || item.Action == "Deactivate")
+                                    {
+                                        <span class="badge bg-danger">@item.Action</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">@item.Action</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@item.EntityName</span>
+                                </td>
+                                <td>
+                                    <small class="font-monospace">@(item.RecordId ?? "-")</small>
+                                </td>
+                                <td>
+                                    <span class="small text-dark">@item.Details</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted font-monospace">@(item.IpAddress ?? "127.0.0.1")</small>
+                                </td>
+                                <td class="text-end">
+                                    @if (!string.IsNullOrEmpty(item.OldValue) || !string.IsNullOrEmpty(item.NewValue))
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#auditDiffModal-@item.AuditLogId">
+                                            <i class="bi bi-file-diff"></i> Diff
+                                        </button>
+
+                                        <!-- Diff Modal -->
+                                        <div class="modal fade" id="auditDiffModal-@item.AuditLogId" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content text-start">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Record Modification Diff</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <h6 class="fw-bold text-danger">Previous State (Old Value):</h6>
+                                                        <div class="p-2 bg-light font-monospace small mb-3 border text-danger">
+                                                            @(string.IsNullOrEmpty(item.OldValue) ? "(None)" : item.OldValue)
+                                                        </div>
+
+                                                        <h6 class="fw-bold text-success">Modified State (New Value):</h6>
+                                                        <div class="p-2 bg-light font-monospace small border text-success">
+                                                            @(string.IsNullOrEmpty(item.NewValue) ? "(None)" : item.NewValue)
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+                                No audit records found for the selected criteria.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Showing page @ViewBag.PageNumber of @ViewBag.TotalPages</span>
+            <ul class="pagination pagination-sm mb-0">
+                @for (int p = 1; p <= ViewBag.TotalPages; p++)
+                {
+                    <li class="page-item @(p == ViewBag.PageNumber ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-userFilter="@ViewBag.UserFilter" asp-route-moduleFilter="@ViewBag.ModuleFilter" asp-route-actionFilter="@ViewBag.ActionFilter">@p</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

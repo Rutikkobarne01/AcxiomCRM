@@ -1,0 +1,95 @@
+@model AcxiomCRM.ViewModels.FollowUpCreateEditViewModel
+@{
+    ViewData["Title"] = "Schedule Follow-Up";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="fw-bold mb-0">Schedule Follow-Up Activity</h3>
+                <span class="text-muted small">Plan timely touchpoints with customers and prospects</span>
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerId" class="form-label fw-semibold"></label>
+                            <select asp-for="CustomerId" class="form-select" asp-items="ViewBag.CustomersList">
+                                <option value="">-- Or Select Lead Below --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="LeadId" class="form-label fw-semibold"></label>
+                            <select asp-for="LeadId" class="form-select" asp-items="ViewBag.LeadsList">
+                                <option value="">-- Or Select Customer Above --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FollowUpType" class="form-label fw-semibold"></label>
+                            <select asp-for="FollowUpType" class="form-select">
+                                <option value="Call">Phone Call</option>
+                                <option value="Meeting">Meeting (In-person / Virtual)</option>
+                                <option value="Email">Email Communication</option>
+                                <option value="Task">Action Item / Task</option>
+                            </select>
+                            <span asp-validation-for="FollowUpType" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FollowUpDate" class="form-label fw-semibold"></label>
+                            <input asp-for="FollowUpDate" class="form-control" type="datetime-local" min="@DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm")" />
+                            <span asp-validation-for="FollowUpDate" class="text-danger small"></span>
+                            <div class="form-text small">Mandatory rule: Cannot be earlier than current date & time.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Subject" class="form-label fw-semibold"></label>
+                            <input asp-for="Subject" class="form-control" placeholder="e.g. Discuss Q4 software migration and SLA terms" />
+                            <span asp-validation-for="Subject" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Remarks" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Remarks" class="form-control" rows="3" placeholder="Meeting agenda, preparation notes, conference link..."></textarea>
+                            <span asp-validation-for="Remarks" class="text-danger small"></span>
+                        </div>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+                        {
+                            <div class="col-md-6">
+                                <label asp-for="AssignedTo" class="form-label fw-semibold"></label>
+                                <select asp-for="AssignedTo" class="form-select" asp-items="ViewBag.UsersList">
+                                    <option value="">-- Assign to Current User --</option>
+                                </select>
+                            </div>
+                        }
+
+                        <div class="col-12 mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+                            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="bi bi-calendar-check me-1"></i> Confirm Schedule
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

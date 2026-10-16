@@ -1,0 +1,185 @@
+@model AcxiomCRM.ViewModels.CustomerListViewModel
+@{
+    ViewData["Title"] = "Customer Management";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Customer Management</h2>
+        <p class="text-muted mb-0">Manage customer accounts, contacts, and relationship history</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Reports" asp-action="ExportCsv" asp-route-type="Customers" class="btn btn-outline-secondary">
+            <i class="bi bi-download me-1"></i> Export CSV
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Add New Customer
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, email, phone, company..." value="@Model.SearchTerm" />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
+                    <option value="Inactive" selected="@(Model.StatusFilter == "Inactive")">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Customer List Table -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Customer / Company</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Owner</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Customers.Any())
+                    {
+                        foreach (var item in Model.Customers)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark border font-monospace">@item.CustomerCode</span>
+                                </td>
+                                <td>
+                                    <a asp-action="Details" asp-route-id="@item.CustomerId" class="fw-bold text-decoration-none text-primary">
+                                        @item.CustomerName
+                                    </a>
+                                    @if (!string.IsNullOrEmpty(item.CompanyName))
+                                    {
+                                        <div class="small text-muted">@item.CompanyName</div>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="mailto:@item.Email" class="text-decoration-none text-secondary">
+                                        <i class="bi bi-envelope me-1"></i> @item.Email
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="tel:@item.Phone" class="text-decoration-none text-secondary">
+                                        <i class="bi bi-telephone me-1"></i> @item.Phone
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.City))
+                                    {
+                                        <span>@item.City, @item.State</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.Status == "Active")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@(item.Owner?.FullName ?? "Assigned")</small>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@item.CustomerId" class="btn btn-outline-info" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.CustomerId" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" title="Deactivate/Delete" data-bs-toggle="modal" data-bs-target="#deleteModal-@item.CustomerId">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal-@item.CustomerId" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content text-start">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirm Deletion / Deactivation</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Are you sure you want to remove or deactivate customer <strong>@item.CustomerName</strong> (@item.CustomerCode)?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form asp-action="Delete" asp-route-id="@item.CustomerId" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger">Confirm</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No customers found matching the criteria.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Showing page @Model.PageNumber of @Model.TotalPages (Total: @Model.TotalCount)</span>
+            <ul class="pagination pagination-sm mb-0">
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.PageNumber ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-page="@p" asp-route-search="@Model.SearchTerm" asp-route-status="@Model.StatusFilter">@p</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

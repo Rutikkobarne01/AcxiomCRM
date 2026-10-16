@@ -1,0 +1,94 @@
+@model List<AcxiomCRM.Models.Entities.Activity>
+@{
+    ViewData["Title"] = "Activity Management";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Activity Log & Touchpoint History</h2>
+        <p class="text-muted mb-0">Complete historical audit trail of calls, meetings, emails and tasks</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Log Activity
+        </a>
+    </div>
+</div>
+
+<!-- Type Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <input type="text" name="search" class="form-control" placeholder="Search subject or description..." value="@ViewBag.SearchTerm" />
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">All Activity Types</option>
+                    <option value="Call" selected="@(ViewBag.SelectedType == "Call")">Phone Call</option>
+                    <option value="Meeting" selected="@(ViewBag.SelectedType == "Meeting")">Meeting</option>
+                    <option value="Email" selected="@(ViewBag.SelectedType == "Email")">Email</option>
+                    <option value="Task" selected="@(ViewBag.SelectedType == "Task")">Task</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-funnel me-1"></i> Filter</button>
+            </div>
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Activity Timeline -->
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        @if (Model.Any())
+        {
+            <div class="timeline">
+                @foreach (var a in Model)
+                {
+                    <div class="d-flex mb-4 pb-3 border-bottom align-items-start">
+                        <div class="me-3">
+                            <span class="badge rounded-circle p-3 @(a.ActivityType == "Call" ? "bg-primary" : a.ActivityType == "Meeting" ? "bg-warning text-dark" : a.ActivityType == "Email" ? "bg-info text-dark" : "bg-secondary")">
+                                <i class="bi @(a.ActivityType == "Call" ? "bi-telephone fs-5" : a.ActivityType == "Meeting" ? "bi-calendar-event fs-5" : a.ActivityType == "Email" ? "bi-envelope fs-5" : "bi-check2-square fs-5")"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h5 class="fw-bold mb-0">@a.Subject</h5>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-clock me-1"></i> @a.ActivityDate.ToString("dd MMM yyyy, hh:mm tt")
+                                </span>
+                            </div>
+                            <div class="small text-muted mb-2">
+                                <span class="badge bg-secondary me-2">@a.ActivityType</span>
+                                @if (a.Customer != null)
+                                {
+                                    <span class="me-2"><i class="bi bi-person me-1"></i> Customer: <strong>@a.Customer.CustomerName</strong></span>
+                                }
+                                @if (a.Lead != null)
+                                {
+                                    <span class="me-2"><i class="bi bi-funnel me-1"></i> Lead: <strong>@a.Lead.LeadName</strong></span>
+                                }
+                                <span>&bull; Performed By: <strong>@(a.AssignedUser?.FullName ?? "System")</strong></span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(a.Description))
+                            {
+                                <p class="text-secondary mb-0 bg-light p-2 rounded small">@a.Description</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-clock-history fs-1 d-block mb-2"></i>
+                No activities found.
+            </div>
+        }
+    </div>
+</div>

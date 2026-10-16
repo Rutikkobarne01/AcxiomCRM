@@ -1,0 +1,340 @@
+@model AcxiomCRM.ViewModels.MasterReportViewModel
+@{
+    ViewData["Title"] = "CRM Reports Hub";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">CRM Analytics & Reports Hub</h2>
+        <p class="text-muted mb-0">Role-authorized reporting across sales pipeline, lead conversion, and team activity</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-download me-1"></i> Export Data CSV
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" asp-action="ExportCsv" asp-route-type="Pipeline"><i class="bi bi-file-earmark-spreadsheet me-2"></i> Export Pipeline Deals</a></li>
+                <li><a class="dropdown-item" asp-action="ExportCsv" asp-route-type="Customers"><i class="bi bi-file-earmark-spreadsheet me-2"></i> Export Customer List</a></li>
+                <li><a class="dropdown-item" asp-action="ExportCsv" asp-route-type="Leads"><i class="bi bi-file-earmark-spreadsheet me-2"></i> Export Leads Summary</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Report Navigation Tabs -->
+<ul class="nav nav-pills mb-4 gap-2" id="reportTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link @(Model.Filter.ReportType == "Pipeline" ? "active" : "")" asp-action="Index" asp-route-type="Pipeline">
+            <i class="bi bi-bar-chart-steps me-1"></i> Pipeline Report
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Filter.ReportType == "Conversion" ? "active" : "")" asp-action="Index" asp-route-type="Conversion">
+            <i class="bi bi-pie-chart me-1"></i> Sales & Conversion
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Filter.ReportType == "Customers" ? "active" : "")" asp-action="Index" asp-route-type="Customers">
+            <i class="bi bi-people me-1"></i> Customer Report
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Filter.ReportType == "Leads" ? "active" : "")" asp-action="Index" asp-route-type="Leads">
+            <i class="bi bi-funnel me-1"></i> Lead Report
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(Model.Filter.ReportType == "FollowUps" ? "active" : "")" asp-action="Index" asp-route-type="FollowUps">
+            <i class="bi bi-calendar-check me-1"></i> Follow-Up Report
+        </a>
+    </li>
+    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+    {
+        <li class="nav-item">
+            <a class="nav-link @(Model.Filter.ReportType == "UserActivity" ? "active" : "")" asp-action="Index" asp-route-type="UserActivity">
+                <i class="bi bi-person-lines-fill me-1"></i> User Activity Report
+            </a>
+        </li>
+    }
+</ul>
+
+<!-- 1. Pipeline Report -->
+@if (Model.Filter.ReportType == "Pipeline")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header"><i class="bi bi-diagram-3 me-2 text-primary"></i> Stage-Wise Pipeline Amount & Weighted Value</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Stage</th>
+                                    <th>Deals</th>
+                                    <th>Total Amount</th>
+                                    <th>Avg Win %</th>
+                                    <th>Weighted Pipeline</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.PipelineByStage)
+                                {
+                                    <tr>
+                                        <td><span class="badge badge-stage-@item.Stage.ToLower()">@item.Stage</span></td>
+                                        <td>@item.OpportunityCount</td>
+                                        <td><strong>₹@item.TotalAmount.ToString("N0")</strong></td>
+                                        <td>@item.AverageProbability.ToString("F0")%</td>
+                                        <td class="text-purple fw-bold" style="color: #7c3aed;">₹@item.WeightedAmount.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td>Total</td>
+                                    <td>@Model.PipelineByStage.Sum(x => x.OpportunityCount)</td>
+                                    <td>₹@Model.PipelineByStage.Sum(x => x.TotalAmount).ToString("N0")</td>
+                                    <td>-</td>
+                                    <td style="color: #7c3aed;">₹@Model.PipelineByStage.Sum(x => x.WeightedAmount).ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header"><i class="bi bi-person-workspace me-2 text-info"></i> Owner-Wise Pipeline Contribution</div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Owner / Sales Rep</th>
+                                    <th>Opportunities</th>
+                                    <th>Total Deal Value</th>
+                                    <th>Weighted Deal Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var owner in Model.PipelineByOwner)
+                                {
+                                    <tr>
+                                        <td><strong>@owner.OwnerName</strong></td>
+                                        <td>@owner.OpportunityCount</td>
+                                        <td>₹@owner.TotalAmount.ToString("N0")</td>
+                                        <td class="text-purple fw-bold" style="color: #7c3aed;">₹@owner.WeightedAmount.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 2. Conversion Report -->
+else if (Model.Filter.ReportType == "Conversion")
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm p-3 text-center border-start border-4 border-primary">
+                <div class="text-muted small text-uppercase fw-semibold">Lead Conversion Rate</div>
+                <div class="fs-2 fw-bold text-primary">@Model.ConversionSummary.ConversionRate.ToString("F1")%</div>
+                <div class="small text-muted">@Model.ConversionSummary.ConvertedLeads of @Model.ConversionSummary.TotalLeads leads converted</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm p-3 text-center border-start border-4 border-success">
+                <div class="text-muted small text-uppercase fw-semibold">Deal Win Rate</div>
+                <div class="fs-2 fw-bold text-success">@Model.ConversionSummary.WinRate.ToString("F1")%</div>
+                <div class="small text-muted">@Model.ConversionSummary.WonOpportunities won vs @Model.ConversionSummary.LostOpportunities lost</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm p-3 text-center border-start border-4 border-warning">
+                <div class="text-muted small text-uppercase fw-semibold">Active Nurturing Leads</div>
+                <div class="fs-2 fw-bold text-warning">@Model.ConversionSummary.ActiveLeads</div>
+                <div class="small text-muted">In qualification or contacted</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm p-3 text-center border-start border-4 border-danger">
+                <div class="text-muted small text-uppercase fw-semibold">Lost Opportunities</div>
+                <div class="fs-2 fw-bold text-danger">@Model.ConversionSummary.LostOpportunities</div>
+                <div class="small text-muted">Deals marked as lost</div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 3. Customers Report -->
+else if (Model.Filter.ReportType == "Customers")
+{
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-people me-2 text-primary"></i> Customer Directory Report</span>
+            <span class="badge bg-light text-dark border">@Model.Customers.Count records</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Customer Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Owner</th>
+                            <th>Created Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Customers)
+                        {
+                            <tr>
+                                <td><span class="badge bg-light text-dark border font-monospace">@c.CustomerCode</span></td>
+                                <td><strong>@c.CustomerName</strong></td>
+                                <td>@c.Email</td>
+                                <td>@c.Phone</td>
+                                <td><span class="badge @(c.Status == "Active" ? "bg-success" : "bg-secondary")">@c.Status</span></td>
+                                <td>@(c.Owner?.FullName ?? "Assigned")</td>
+                                <td>@c.CreatedDate.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 4. Leads Report -->
+else if (Model.Filter.ReportType == "Leads")
+{
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-funnel me-2 text-primary"></i> Lead Acquisition & Qualification Report</span>
+            <span class="badge bg-light text-dark border">@Model.Leads.Count records</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Lead Name</th>
+                            <th>Source</th>
+                            <th>Priority</th>
+                            <th>Expected Value</th>
+                            <th>Status</th>
+                            <th>Assigned Sales Rep</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in Model.Leads)
+                        {
+                            <tr>
+                                <td><span class="badge bg-light text-dark border font-monospace">@l.LeadCode</span></td>
+                                <td><strong>@l.LeadName</strong></td>
+                                <td>@l.Source</td>
+                                <td>@l.Priority</td>
+                                <td>₹@l.ExpectedValue.ToString("N0")</td>
+                                <td><span class="badge @(l.Status == "Converted" ? "bg-success" : l.Status == "Qualified" ? "bg-primary" : "bg-secondary")">@l.Status</span></td>
+                                <td>@(l.AssignedUser?.FullName ?? "Assigned")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 5. Follow-Ups Report -->
+else if (Model.Filter.ReportType == "FollowUps")
+{
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-calendar-check me-2 text-primary"></i> Follow-Up Activity Breakdown</span>
+            <span class="badge bg-light text-dark border">@Model.FollowUps.Count records</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Subject</th>
+                            <th>Related To</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                            <th>Assigned User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var f in Model.FollowUps)
+                        {
+                            <tr>
+                                <td><span class="badge bg-light text-dark border">@f.FollowUpType</span></td>
+                                <td><strong>@f.Subject</strong></td>
+                                <td>@(f.Customer?.CustomerName ?? f.Lead?.LeadName ?? "General")</td>
+                                <td>@f.FollowUpDate.ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td><span class="badge @(f.Status == "Completed" ? "bg-success" : f.Status == "Planned" ? "bg-warning text-dark" : "bg-secondary")">@f.Status</span></td>
+                                <td>@(f.AssignedUser?.FullName ?? "Assigned")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 6. User Activity Report -->
+else if (Model.Filter.ReportType == "UserActivity")
+{
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-person-lines-fill me-2 text-primary"></i> Team Performance & Activity Count</span>
+            <span class="badge bg-light text-dark border">@Model.UserActivities.Count members</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Role</th>
+                            <th>Assigned Customers</th>
+                            <th>Managed Leads</th>
+                            <th>Opportunities</th>
+                            <th>Completed Follow-Ups</th>
+                            <th>Total Audit Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var u in Model.UserActivities)
+                        {
+                            <tr>
+                                <td><strong>@u.UserName</strong></td>
+                                <td><span class="badge bg-light text-dark border">@u.Role</span></td>
+                                <td>@u.CustomersCount</td>
+                                <td>@u.LeadsCount</td>
+                                <td>@u.OpportunitiesCount</td>
+                                <td><span class="text-success fw-bold">@u.CompletedFollowUpsCount</span></td>
+                                <td><span class="badge bg-dark">@u.TotalAuditActions</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}

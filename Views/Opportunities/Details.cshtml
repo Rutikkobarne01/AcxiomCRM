@@ -1,0 +1,158 @@
+@model AcxiomCRM.Models.Entities.Opportunity
+@{
+    ViewData["Title"] = Model.OpportunityName + " - Deal Details";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <div class="d-flex align-items-center gap-2">
+            <h2 class="fw-bold mb-0">@Model.OpportunityName</h2>
+            <span class="badge badge-stage-@Model.Stage.ToLower() fs-6">@Model.Stage</span>
+            <span class="badge @(Model.Status == "Won" ? "bg-success" : Model.Status == "Lost" ? "bg-danger" : "bg-primary")">@Model.Status</span>
+        </div>
+        <p class="text-muted mb-0">
+            Account: <strong>@(Model.Customer?.CustomerName ?? "Direct Prospect")</strong> &bull; Created on @Model.CreatedDate.ToString("dd MMM yyyy")
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.OpportunityId" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i> Edit Deal
+        </a>
+        <a asp-controller="FollowUps" asp-action="Create" asp-route-customerId="@Model.CustomerId" class="btn btn-primary btn-sm">
+            <i class="bi bi-calendar-plus me-1"></i> Schedule Follow-Up
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Pipeline
+        </a>
+    </div>
+</div>
+
+<!-- Visual Pipeline Stage Tracker -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h6 class="text-muted small text-uppercase fw-bold mb-3">Sales Pipeline Progression</h6>
+        <div class="d-flex flex-wrap justify-content-between gap-2 position-relative">
+            @{
+                var stages = new[] { "Qualification", "Proposal", "Negotiation", "Won" };
+                int currentStageIdx = Array.IndexOf(stages, Model.Stage);
+                if (Model.Stage == "Lost") currentStageIdx = -1;
+            }
+
+            @for (int i = 0; i < stages.Length; i++)
+            {
+                bool isPastOrCurrent = (currentStageIdx >= i);
+                bool isCurrent = (currentStageIdx == i);
+
+                <div class="flex-fill text-center p-3 rounded-3 @(isCurrent ? "bg-primary text-white shadow-sm" : isPastOrCurrent ? "bg-light border border-primary text-primary" : "bg-light text-muted border")">
+                    <div class="fw-bold fs-6">@(i + 1). @stages[i]</div>
+                    <div class="small">@(isCurrent ? "Current Stage" : isPastOrCurrent ? "Passed" : "Upcoming")</div>
+                </div>
+            }
+
+            @if (Model.Stage == "Lost")
+            {
+                <div class="flex-fill text-center p-3 rounded-3 bg-danger text-white shadow-sm">
+                    <div class="fw-bold fs-6"><i class="bi bi-x-circle me-1"></i> Deal Closed Lost</div>
+                    <div class="small">Opportunity Terminated</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Deal Financial Highlights -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center border-start border-4 border-primary">
+            <div class="text-muted small text-uppercase fw-semibold">Contract Amount</div>
+            <div class="fs-2 fw-bold text-primary">₹@Model.Amount.ToString("N0")</div>
+            <div class="small text-muted">Full opportunity deal value</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center border-start border-4 border-info">
+            <div class="text-muted small text-uppercase fw-semibold">Win Probability</div>
+            <div class="fs-2 fw-bold text-info">@Model.Probability%</div>
+            <div class="small text-muted">Estimated closing likelihood</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 text-center border-start border-4 border-purple" style="border-left-color: #8b5cf6 !important;">
+            <div class="text-muted small text-uppercase fw-semibold">Weighted Pipeline Value</div>
+            <div class="fs-2 fw-bold" style="color: #7c3aed;">₹@Model.WeightedValue.ToString("N0")</div>
+            <div class="small text-muted">Amount &times; Probability / 100</div>
+        </div>
+    </div>
+</div>
+
+<!-- Opportunity Details & Audit History -->
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header"><i class="bi bi-info-circle me-2 text-primary"></i> Opportunity Parameters</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted small">Target Customer</dt>
+                    <dd class="col-sm-7">
+                        @if (Model.Customer != null)
+                        {
+                            <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="text-decoration-none fw-semibold">
+                                @Model.Customer.CustomerName
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Unassigned Customer</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-5 text-muted small">Expected Close Date</dt>
+                    <dd class="col-sm-7 fw-semibold">@Model.ExpectedCloseDate.ToString("dd MMMM yyyy")</dd>
+
+                    <dt class="col-sm-5 text-muted small">Assigned Sales Rep</dt>
+                    <dd class="col-sm-7"><span class="badge bg-light text-dark border">@(Model.AssignedUser?.FullName ?? "Assigned")</span></dd>
+
+                    <dt class="col-sm-5 text-muted small">Strategic Notes</dt>
+                    <dd class="col-sm-7">
+                        <p class="mb-0 text-secondary">@(Model.Notes ?? "No additional notes provided.")</p>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header"><i class="bi bi-journal-text me-2 text-secondary"></i> Deal Audit History</div>
+            <div class="card-body p-0">
+                @{
+                    var auditLogs = ViewBag.AuditLogs as List<AcxiomCRM.Models.Entities.AuditLog> ?? new();
+                }
+                @if (auditLogs.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var log in auditLogs)
+                        {
+                            <li class="list-group-item py-2 px-3 small">
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge bg-light text-dark border">@log.Action</span>
+                                    <span class="text-muted">@log.CreatedDate.ToString("dd MMM, hh:mm tt")</span>
+                                </div>
+                                <div class="mt-1 text-dark">@log.Details</div>
+                                @if (!string.IsNullOrEmpty(log.NewValue))
+                                {
+                                    <div class="text-muted font-monospace" style="font-size: 0.75rem;">@log.NewValue</div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="p-4 text-center text-muted small">No audit history found.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
