@@ -2,11 +2,6 @@
 
 An enterprise-ready ASP.NET Core MVC application developed strictly according to the **AcxiomCRM Functional & Technical Project Documentation Assignment**.
 
----
-
-## 📁 Project Location
-* **Desktop Folder Path**: `C:\Users\Yash\Desktop\AcxiomCRM`
-* **Direct 1-Click Runner**: Double-click `run_project.bat` to launch immediately!
 
 ---
 
