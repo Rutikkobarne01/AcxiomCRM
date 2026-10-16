@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AcxiomCRM")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+71cd85782d157cac0ee78bbfaaf577e3055ea62b")]
 [assembly: System.Reflection.AssemblyProductAttribute("AcxiomCRM")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AcxiomCRM")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -9,6 +9,10 @@ An enterprise-ready ASP.NET Core MVC application developed strictly according to
 * **Direct 1-Click Runner**: Double-click `run_project.bat` to launch immediately!
 
 ---
+![alt text](image.png)
+![alt text](<WhatsApp Image 2026-10-16 at 8.20.32 PM.jpeg>)
+![alt text](<WhatsApp Image 2026-10-16 at 8.20.32 PM (1).jpeg>)
+![alt text](<WhatsApp Image 2026-10-16 at 8.20.32 PM (2).jpeg>)
 
 ## 🚀 How to Run
 Open PowerShell or Command Prompt in this folder and execute:
